@@ -1,0 +1,9 @@
+services:
+  crate:
+    build: .
+    container_name: crate-mp3
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./downloads:/app/downloads
+    restart: unless-stopped
