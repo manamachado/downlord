@@ -3,6 +3,7 @@ const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
+const { getTracks, getData } = require("spotify-url-info")(fetch);
 
 const app = express();
 const PORT = 3000;
@@ -43,9 +44,26 @@ function sendSSE(jobId, data) {
 }
 
 // ─── Get playlist/video info ─────────────────────────────────────────────────
-app.post("/api/info", (req, res) => {
+app.post("/api/info", async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: "URL obrigatória" });
+
+  if (url.includes("spotify.com")) {
+    try {
+      const data = await getData(url);
+      const isPlaylist = data.type === 'playlist' || data.type === 'album';
+      const tracks = await getTracks(url);
+      
+      return res.json({
+        isPlaylist,
+        count: tracks.length,
+        title: data.name || data.title || "Spotify",
+        items: tracks.map((t, idx) => ({ id: t.id || idx.toString(), title: `${t.artist || t.artists?.[0]?.name || ''} - ${t.name}` }))
+      });
+    } catch (e) {
+      return res.status(500).json({ error: "Erro ao buscar do Spotify", details: e.message });
+    }
+  }
 
   const args = [
     "--dump-json",
@@ -82,28 +100,65 @@ app.post("/api/info", (req, res) => {
 });
 
 // ─── Download endpoint ────────────────────────────────────────────────────────
-app.post("/api/download", (req, res) => {
+app.post("/api/download", async (req, res) => {
   const { url, quality = "192" } = req.body;
   if (!url) return res.status(400).json({ error: "URL obrigatória" });
 
   const jobId = uuidv4();
-  const outputTemplate = path.join(DOWNLOADS_DIR, `${jobId}_%(playlist_index)s_%(title)s.%(ext)s`);
+  // Template includes jobId to prevent collisions. We strip it upon completion.
+  const outputTemplate = path.join(DOWNLOADS_DIR, `${jobId}_%(autonumber)s_%(title)s.%(ext)s`);
 
   // Quality map: 0 = best, 5 = mid, 9 = worst
   const qualityMap = { "320": "0", "192": "5", "128": "7" };
   const ytQuality = qualityMap[quality] || "5";
 
-  const args = [
-    url,
-    "-x",
-    "--audio-format", "mp3",
-    "--audio-quality", ytQuality,
-    "--no-playlist-reverse",
-    "--newline",
-    "--progress",
-    "-o", outputTemplate,
-    "--no-warnings",
-  ];
+  let args = [];
+  let batchFilePath = null;
+  let spotifyTracks = null;
+
+  try {
+    if (url.includes("spotify.com")) {
+      const tracks = await getTracks(url);
+      if (!tracks || tracks.length === 0) {
+        return res.status(400).json({ error: "Nenhuma faixa encontrada no Spotify." });
+      }
+      spotifyTracks = tracks;
+      
+      batchFilePath = path.join(DOWNLOADS_DIR, `batch_${jobId}.txt`);
+      const queries = tracks.map(t => {
+        const artist = t.artist || (t.artists && t.artists[0] ? t.artists[0].name : "");
+        return `ytsearch1:${artist} - ${t.name}`;
+      }).join("\n");
+      
+      fs.writeFileSync(batchFilePath, queries, "utf-8");
+      
+      args = [
+        "-a", batchFilePath,
+        "-x",
+        "--audio-format", "mp3",
+        "--audio-quality", ytQuality,
+        "--no-playlist-reverse",
+        "--newline",
+        "--progress",
+        "-o", outputTemplate,
+        "--no-warnings",
+      ];
+    } else {
+      args = [
+        url,
+        "-x",
+        "--audio-format", "mp3",
+        "--audio-quality", ytQuality,
+        "--no-playlist-reverse",
+        "--newline",
+        "--progress",
+        "-o", outputTemplate,
+        "--no-warnings",
+      ];
+    }
+  } catch (e) {
+    return res.status(500).json({ error: "Erro ao processar URL", details: e.message });
+  }
 
   res.json({ jobId });
 
@@ -120,8 +175,9 @@ app.post("/api/download", (req, res) => {
       sendSSE(jobId, { type: "progress", percent: parseFloat(progressMatch[1]), raw: text.trim() });
     }
     if (destMatch) {
-      const filePath = destMatch[1].trim();
-      const fileName = path.basename(filePath);
+      let filePath = destMatch[1].trim();
+      let fileName = path.basename(filePath);
+
       downloadedFiles.push(fileName);
       sendSSE(jobId, { type: "file", fileName, filePath: `/downloads/${fileName}` });
     }
@@ -132,19 +188,54 @@ app.post("/api/download", (req, res) => {
   });
 
   proc.on("close", (code) => {
+    if (batchFilePath && fs.existsSync(batchFilePath)) {
+      try { fs.unlinkSync(batchFilePath); } catch (e) {}
+    }
+
+    // Rename files after all extractions form yt-dlp have properly finished
+    const finalFiles = downloadedFiles.map(fileName => {
+      let finalName = fileName.replace(/^[a-f0-9-]+_\d{5}_/, "");
+      
+      if (spotifyTracks) {
+        const matchIdx = fileName.match(/_(\d{5})_/);
+        if (matchIdx) {
+          const idx = parseInt(matchIdx[1], 10) - 1;
+          const track = spotifyTracks[idx];
+          if (track) {
+            const artist = track.artist || (track.artists && track.artists[0] ? track.artists[0].name : "");
+            const safeName = `${artist} - ${track.name}`.replace(/[\\/:*?"<>|]/g, "_");
+            finalName = `${safeName}.mp3`;
+          }
+        }
+      }
+
+      const oldPath = path.join(DOWNLOADS_DIR, fileName);
+      const newPath = path.join(DOWNLOADS_DIR, finalName);
+      
+      try {
+        if (oldPath !== newPath && fs.existsSync(oldPath)) {
+          fs.renameSync(oldPath, newPath);
+          return finalName;
+        }
+      } catch (e) {
+        console.error("Rename failed on close:", e);
+      }
+      return fileName;
+    });
+
     if (code === 0) {
       // Save to history
       const entry = {
         id: jobId,
         url,
         quality,
-        files: downloadedFiles,
+        files: finalFiles,
         date: new Date().toISOString(),
         status: "success",
       };
       history.unshift(entry);
       if (history.length > 50) history.pop();
-      sendSSE(jobId, { type: "done", files: downloadedFiles });
+      sendSSE(jobId, { type: "done", files: finalFiles });
     } else {
       sendSSE(jobId, { type: "error", message: "Download falhou" });
     }
