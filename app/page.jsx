@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Music, Download, Check, AlertCircle, Loader2, PlayCircle, HardDrive, RefreshCcw, Trash2 } from "lucide-react";
+import { Music, Download, Check, AlertCircle, Loader2, PlayCircle, HardDrive, RefreshCcw, Trash2, Film } from "lucide-react";
 
 export default function Home() {
   const [url, setUrl] = useState("");
   const [info, setInfo] = useState(null);
   const [loadingInfo, setLoadingInfo] = useState(false);
+  const [type, setType] = useState("audio");
   const [quality, setQuality] = useState("192");
   const [activeJob, setActiveJob] = useState(null);
   const [progress, setProgress] = useState(0);
@@ -68,7 +69,7 @@ export default function Home() {
       const response = await fetch("/api/download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, quality }),
+        body: JSON.stringify({ url, type, quality }),
       });
 
       if (!response.body) throw new Error("Sem resposta do servidor");
@@ -168,20 +169,43 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mt-2">
-            <div className="flex gap-3">
-              {["320", "192", "128"].map((q) => (
+            <div className="flex flex-col w-full sm:w-auto gap-4">
+              <div className="flex gap-2 p-1 bg-black/40 rounded-xl border border-white/5 w-fit">
                 <button
-                  key={q}
-                  onClick={() => setQuality(q)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    quality === q
-                      ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/50"
-                      : "bg-white/5 text-zinc-400 border border-white/5 hover:bg-white/10"
+                  onClick={() => { setType("audio"); setQuality("192"); }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    type === "audio" ? "bg-indigo-500/20 text-indigo-300" : "text-zinc-500 hover:text-zinc-300"
                   }`}
                 >
-                  {q} kbps
+                  <Music className="w-4 h-4" /> Áudio
                 </button>
-              ))}
+                <button
+                  onClick={() => { setType("video"); setQuality("720p"); }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    type === "video" ? "bg-pink-500/20 text-pink-300" : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  <Film className="w-4 h-4" /> Vídeo
+                </button>
+              </div>
+
+              <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar scroll-smooth">
+                {(type === "audio" ? ["320", "192", "128"] : ["1080p", "720p", "480p", "360p"]).map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => setQuality(q)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                      quality === q
+                        ? type === "audio" 
+                          ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/50" 
+                          : "bg-pink-500/20 text-pink-300 border border-pink-500/50"
+                        : "bg-white/5 text-zinc-400 border border-white/5 hover:bg-white/10"
+                    }`}
+                  >
+                    {q} {type === "audio" ? "kbps" : ""}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <button
@@ -202,7 +226,7 @@ export default function Home() {
             <div>
               <h3 className="font-semibold text-indigo-100">{info.title}</h3>
               <p className="text-zinc-400 text-sm mt-1">
-                {info.isPlaylist ? `Playlist detectada com ${info.count} faixas.` : "Vídeo único detectado."} Formato alvo: {quality} kbps
+                {info.isPlaylist ? `Playlist detectada com ${info.count} faixas.` : "Vídeo único detectado."} Formato alvo: {type === "audio" ? `${quality} kbps` : quality}
               </p>
             </div>
           </div>
@@ -212,7 +236,7 @@ export default function Home() {
         {activeJob && activeJob !== "error" && (
           <div className="mt-8 border-t border-white/5 pt-8">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-zinc-300 font-medium">Extraindo Áudio...</span>
+              <span className="text-zinc-300 font-medium">{type === "audio" ? "Processando Áudio..." : "Processando Vídeo..."}</span>
               <span className="text-pink-400 font-bold">{progress.toFixed(1)}%</span>
             </div>
             <div className="h-2 bg-black/50 rounded-full overflow-hidden mb-4">
@@ -255,7 +279,11 @@ export default function Home() {
                 <li key={file.name} className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors group">
                   <div className="flex items-center gap-4 flex-1 min-w-0">
                     <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                      <Music className="w-4 h-4 text-zinc-400" />
+                      {file.name.endsWith('.mp4') || file.name.endsWith('.mkv') ? (
+                        <Film className="w-4 h-4 text-zinc-400" />
+                      ) : (
+                        <Music className="w-4 h-4 text-zinc-400" />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-zinc-200 font-medium truncate">{file.name}</p>

@@ -4,7 +4,7 @@ export const runtime = 'nodejs';
 
 export async function POST(request) {
   try {
-    const { url, quality } = await request.json();
+    const { url, type, quality } = await request.json();
     if (!url) {
       return new Response(JSON.stringify({ error: 'URL é obrigatória' }), { status: 400 });
     }
@@ -20,7 +20,7 @@ export async function POST(request) {
         };
 
         try {
-          await startDownload(url, quality || "192", sendSSE);
+          await startDownload(url, { type: type || "audio", quality: quality || "192" }, sendSSE);
           try { controller.close(); } catch (err) {}
         } catch (e) {
           console.error("Falha no download:", e);

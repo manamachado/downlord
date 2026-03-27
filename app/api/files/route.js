@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 export async function GET() {
   try {
     const files = fs.readdirSync(DOWNLOADS_DIR)
-      .filter(f => !f.startsWith('.') && (f.endsWith('.mp3') || f.endsWith('.webm') || f.endsWith('.m4a')))
+      .filter(f => !f.startsWith('.') && (f.endsWith('.mp3') || f.endsWith('.webm') || f.endsWith('.m4a') || f.endsWith('.mp4') || f.endsWith('.mkv')))
       .map(f => {
         const stats = fs.statSync(path.join(DOWNLOADS_DIR, f));
         return {
