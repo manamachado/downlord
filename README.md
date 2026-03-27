@@ -1,120 +1,28 @@
-# 🎵 CRATE — YouTube MP3 Downloader
+# SoundVault
 
-App local para baixar músicas e playlists do YouTube Music em MP3.
+O SoundVault é um utilitário de sistema moderno desenhado para baixar e organizar canais de áudio, convertendo playlists de plataformas nativas (como Spotify & YouTube) diretamente para o seu diretório virtual seguro, o cofre (`downloads/`).
 
-## Pré-requisitos
-
-Instale antes de rodar:
-
-### 1. Node.js
-https://nodejs.org (v18+)
-
-### 2. yt-dlp
-```bash
-# Windows (via winget)
-winget install yt-dlp
-
-# Mac
-brew install yt-dlp
-
-# Linux
-sudo apt install yt-dlp
-# ou
-pip install yt-dlp
-```
-
-### 3. FFmpeg
-Necessário para converter para MP3.
-
-```bash
-# Windows — baixe em https://ffmpeg.org/download.html e adicione ao PATH
-# ou via winget:
-winget install ffmpeg
-
-# Mac
-brew install ffmpeg
-
-# Linux
-sudo apt install ffmpeg
-```
-
----
-
-## Rodando com Docker (recomendado)
-
-Não precisa instalar Node, yt-dlp ou FFmpeg na máquina — tudo roda dentro do container.
-
-```bash
-# Build + sobe o container
-docker compose up --build
-
-# Ou em background
-docker compose up --build -d
-```
-
-Abra http://localhost:3000 no browser.
-
-```bash
-# Parar
-docker compose down
-
-# Ver logs
-docker compose logs -f
-```
-
-Os MP3s ficam salvos na pasta `downloads/` da sua máquina (volume mapeado).
-
----
-
-## Rodando sem Docker
-
-### Pré-requisitos
-
-```bash
-# yt-dlp
-winget install yt-dlp   # Windows
-brew install yt-dlp     # Mac
-pip install yt-dlp      # Linux
-
-# FFmpeg
-winget install ffmpeg   # Windows
-brew install ffmpeg     # Mac
-sudo apt install ffmpeg # Linux
-```
-
-```bash
-npm install
-npm start
-```
-
----
+A nova versão é impulsionada através da robusta Edge Network do **Next.js (App Router)** e processada usando utilitários avançados de extração de ffmpeg & yt-dlp. A interface é puramente controlada e dinamizada através do React (Hooks de Client-side), ostentando o design fluid 'Midnight Glass' sobre o Tailwind CSS nativo.
 
 ## Funcionalidades
+- Download e Extração MP3 automática do YouTube.
+- Suporte expansivo para captura de Playlists do Spotify sem auxilio de APIs ou Login!
+- Nomenclatura higienizada e processada individualmente baseada em Metadados.
+- UI Dark Mode com renderização Server-Sent Events (SSE) para stream real-time do processo binário no Backend.
 
-- ✅ Download de música individual
-- ✅ Download de playlist inteira
-- ✅ Escolha de qualidade: 128 / 192 / 320 kbps
-- ✅ Progresso em tempo real (SSE)
-- ✅ Biblioteca de arquivos baixados
-- ✅ Histórico de downloads
+## Como Executar
+O SoundVault requer um backend Linux/Unix configurado com ffmpeg e bibliotecas Python por motivos do Core Extractor. Portanto, o uso pretendido é através do **Docker**.
 
----
+1. Mapeie a pasta `/downloads`
+2. Construa a Imagem (Standalone Next.js) e lance o Container:
 
-## Estrutura
-
+```bash
+docker compose up -d --build
 ```
-ytmp3/
-├── server.js        # Backend Express + yt-dlp
-├── package.json
-├── public/
-│   └── index.html   # Frontend
-└── downloads/       # Arquivos MP3 gerados
-```
+3. Acesse a GUI em `http://localhost:3000`
 
----
-
-## Observações
-
-- Os arquivos ficam salvos na pasta `downloads/`
-- O histórico é em memória — reseta ao reiniciar o servidor
-- Funciona com URLs do YouTube e YouTube Music
+## Arquitetura
+- Frontend: `React` / `Tailwind CSS 4.0`
+- Backend Edge: `Next.js API Route Handlers`
+- Dependências Críticas: `yt-dlp`, `ffmpeg`, `spotify-url-info`
+- Paradigma API: `ReadableStream` & SSE Web Standard
