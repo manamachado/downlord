@@ -1,17 +1,18 @@
-# SoundVault
+# downlord
 
-O SoundVault é um utilitário de sistema moderno desenhado para baixar e organizar canais de áudio, convertendo playlists de plataformas nativas (como Spotify & YouTube) diretamente para o seu diretório virtual seguro, o cofre (`downloads/`).
+O downlord é um utilitário de sistema moderno desenhado para baixar e organizar canais de áudio e vídeo, convertendo playlists de plataformas nativas (como Spotify & YouTube) diretamente para o seu diretório virtual seguro, o cofre (`downloads/`).
 
 A nova versão é impulsionada através da robusta Edge Network do **Next.js (App Router)** e processada usando utilitários avançados de extração de ffmpeg & yt-dlp. A interface é puramente controlada e dinamizada através do React (Hooks de Client-side), ostentando o design fluid 'Midnight Glass' sobre o Tailwind CSS nativo.
 
 ## Funcionalidades
 - Download e Extração MP3 automática do YouTube.
-- Suporte expansivo para captura de Playlists do Spotify sem auxilio de APIs ou Login!
+- Download e Extração MP4 automática do YouTube.
+- Suporte para captura de Playlists do Spotify sem auxilio de APIs ou Login!
 - Nomenclatura higienizada e processada individualmente baseada em Metadados.
 - UI Dark Mode com renderização Server-Sent Events (SSE) para stream real-time do processo binário no Backend.
 
 ## Como Executar
-O SoundVault requer um backend Linux/Unix configurado com ffmpeg e bibliotecas Python por motivos do Core Extractor. Portanto, o uso pretendido é através do **Docker**.
+O downlord requer um backend Linux/Unix configurado com ffmpeg e bibliotecas Python por motivos do Core Extractor. Portanto, o uso pretendido é através do **Docker**.
 
 1. Mapeie a pasta `/downloads`
 2. Construa a Imagem (Standalone Next.js) e lance o Container:

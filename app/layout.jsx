@@ -5,8 +5,8 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-jakarta' });
 
 export const metadata = {
-  title: 'SoundVault | Offline Music Manager',
-  description: 'Baixe músicas do YouTube e Spotify diretamente para o seu cofre local com máxima qualidade.',
+  title: 'downlord | Offline Music & Video Downloader',
+  description: 'Baixe músicas e vídeos do YouTube e Spotify com máxima qualidade.',
 };
 
 export default function RootLayout({ children }) {

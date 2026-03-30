@@ -13,7 +13,7 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState([]);
   const [files, setFiles] = useState([]);
-  
+
   const progressRef = useRef(null);
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function Home() {
 
   const startDownload = async () => {
     if (!url) return;
-    
+
     setActiveJob("starting");
     setProgress(0);
     setLogs([]);
@@ -84,13 +84,13 @@ export default function Home() {
 
         buffer += decoder.decode(value, { stream: true });
         const parts = buffer.split("\n\n");
-        buffer = parts.pop(); 
+        buffer = parts.pop();
 
         for (const part of parts) {
           if (part.startsWith("data: ")) {
             try {
               const data = JSON.parse(part.replace("data: ", ""));
-              
+
               if (data.type === "started") {
                 setActiveJob(data.jobId);
               } else if (data.type === "progress") {
@@ -144,7 +144,7 @@ export default function Home() {
           <Music className="text-white w-6 h-6" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white font-jakarta">SoundVault</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-white font-jakarta">downlord</h1>
           <p className="text-zinc-400 text-sm">Download Local Engine</p>
         </div>
       </header>
@@ -158,7 +158,7 @@ export default function Home() {
           <div className="relative">
             <input
               type="text"
-              placeholder="Cole o link do YouTube ou Playlist do Spotify"
+              placeholder={`Cole o link do YouTube${type === "audio" ? " ou Playlist do Spotify" : ""}`}
               className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 pl-12 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-inter"
               value={url}
               onChange={handleUrlChange}
@@ -173,17 +173,15 @@ export default function Home() {
               <div className="flex gap-2 p-1 bg-black/40 rounded-xl border border-white/5 w-fit">
                 <button
                   onClick={() => { setType("audio"); setQuality("192"); }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    type === "audio" ? "bg-indigo-500/20 text-indigo-300" : "text-zinc-500 hover:text-zinc-300"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${type === "audio" ? "bg-indigo-500/20 text-indigo-300" : "text-zinc-500 hover:text-zinc-300"
+                    }`}
                 >
                   <Music className="w-4 h-4" /> Áudio
                 </button>
                 <button
                   onClick={() => { setType("video"); setQuality("720p"); }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    type === "video" ? "bg-pink-500/20 text-pink-300" : "text-zinc-500 hover:text-zinc-300"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${type === "video" ? "bg-pink-500/20 text-pink-300" : "text-zinc-500 hover:text-zinc-300"
+                    }`}
                 >
                   <Film className="w-4 h-4" /> Vídeo
                 </button>
@@ -194,13 +192,12 @@ export default function Home() {
                   <button
                     key={q}
                     onClick={() => setQuality(q)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                      quality === q
-                        ? type === "audio" 
-                          ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/50" 
-                          : "bg-pink-500/20 text-pink-300 border border-pink-500/50"
-                        : "bg-white/5 text-zinc-400 border border-white/5 hover:bg-white/10"
-                    }`}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${quality === q
+                      ? type === "audio"
+                        ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/50"
+                        : "bg-pink-500/20 text-pink-300 border border-pink-500/50"
+                      : "bg-white/5 text-zinc-400 border border-white/5 hover:bg-white/10"
+                      }`}
                   >
                     {q} {type === "audio" ? "kbps" : ""}
                   </button>
@@ -240,12 +237,12 @@ export default function Home() {
               <span className="text-pink-400 font-bold">{progress.toFixed(1)}%</span>
             </div>
             <div className="h-2 bg-black/50 rounded-full overflow-hidden mb-4">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-indigo-500 to-pink-500 transition-all duration-300 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <div 
+            <div
               ref={progressRef}
               className="bg-black/60 font-mono text-xs text-zinc-400 p-4 rounded-xl min-h-[120px] max-h-[250px] border border-white/5 overflow-y-auto whitespace-pre-wrap flex flex-col gap-1"
             >
@@ -291,14 +288,14 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity ml-4 shrink-0">
-                    <a 
-                      href={file.path} 
-                      download 
+                    <a
+                      href={file.path}
+                      download
                       className="px-3 py-1.5 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 rounded-lg text-sm font-medium transition-colors"
                     >
                       Salvar
                     </a>
-                    <button 
+                    <button
                       onClick={() => deleteFile(file.name)}
                       className="p-1.5 text-rose-400 hover:bg-rose-400/10 rounded-lg transition-colors"
                       title="Deletar localmente"
