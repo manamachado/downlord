@@ -41,7 +41,7 @@ export default function Home() {
     setUrl(newUrl);
     setInfo(null);
 
-    if (newUrl.length > 10 && (newUrl.includes("youtube.com") || newUrl.includes("youtu.be") || newUrl.includes("spotify.com"))) {
+    if (newUrl.length > 10 && (newUrl.includes("youtube.com") || newUrl.includes("youtu.be") || newUrl.includes("spotify.com") || newUrl.includes("instagram.com") || newUrl.includes("twitter.com") || newUrl.includes("x.com") || newUrl.includes("vimeo.com") || newUrl.includes("tiktok.com"))) {
       setLoadingInfo(true);
       try {
         const res = await fetch("/api/info", {
@@ -151,14 +151,14 @@ export default function Home() {
 
       <section className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 md:p-8 shadow-xl mb-10">
         <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-          <Download className="w-5 h-5 text-indigo-400" /> Baixar Nova Música
+          <Download className="w-5 h-5 text-indigo-400" /> Baixar Novo Conteúdo
         </h2>
 
         <div className="flex flex-col gap-4">
           <div className="relative">
             <input
               type="text"
-              placeholder={`Cole o link do YouTube${type === "audio" ? " ou Playlist do Spotify" : ""}`}
+              placeholder={`Cole o link do YouTube, Spotify, Instagram, TikTok, X/Twitter ou Vimeo`}
               className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 pl-12 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-inter"
               value={url}
               onChange={handleUrlChange}

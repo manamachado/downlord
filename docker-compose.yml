@@ -1,7 +1,7 @@
 services:
-  crate:
+  downlord:
     build: .
-    container_name: crate-mp3
+    container_name: downlord
     ports:
       - "3000:3000"
     volumes:
